@@ -2,13 +2,12 @@ BEGIN {
 	FS = " *[:;,] *"
 }
 
-/author: / {
+/author:/ {
 	for (i = 2; i <= NF; i++) {
-		aux = subString($i, "[ ?()\\t]*$", "");
-		aux2 = subString(aux, "&", "e");
+		sub("[ ?()\\t]+$", "", $i);
 
-		if (aux2 != "") {
-			songs[aux2]++;
+		if ($i != "") {
+			songs[$i]++;
 		}
 		else {
 			songs["Autor desconhecido"]++;
@@ -23,7 +22,3 @@ END {
 	}
 }
 
-
-function subString(str, sequence, replace) {
-	return gensub(sequence, replace, "g", str); 
-}

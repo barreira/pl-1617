@@ -4,15 +4,16 @@ BEGIN {
 
 /title: / {
 	song = $2;
+	sub("\\(\\?\\)", "", song);
+	sub("^[ *=]+", "", song);
 }
 
-/author: / {
+/author:/ {
 	for (i = 2; i <= NF; i++) {
-		aux = subString($i, "[ ?()\\t]*$", "");
-		aux2 = subString(aux, "&", "e");
+		sub("[ ?()\\t]+$", "", $i);
 
-		if (aux2 != "") {
-			authors[aux2][song] = song;
+		if ($i != "") {
+			authors[$i][song] = song;
 		}
 		else {
 			authors["Autor desconhecido"][song] = song;
@@ -22,12 +23,12 @@ BEGIN {
 }
 
 END {
-	for (i in authors) {
-		printf("%s: ", i);
+	for (a in authors) {
+		printf("%s: ", a);
 
 		flag = 0;		
 
-		for (j in authors[i]) {
+		for (j in authors[a]) {
 			if (flag == 0) {
 				printf("%s", j);
 			}
@@ -38,11 +39,6 @@ END {
 			flag++;
 		}
 
-		print;
+		printf("\n");
 	}
-}
-
-
-function subString(str, sequence, replace) {
-	return gensub(sequence, replace, "g", str); 
 }

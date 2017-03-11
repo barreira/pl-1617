@@ -1,29 +1,25 @@
 BEGIN {
-	
+
 	FS = " *[:;,] *"
 }
 
 /singer:/ {
 	for (i = 2; i <= NF; i++) {
-		aux = subString($i, "[ ?()]*$", "");
-		aux2 = subString(aux, "&", "e");
+		sub("[ ?()]+$", "", $i);
 
-		if (!(aux2 in singers) && (aux2 != "")) {
+		if (!($i in singers) && ($i != "")) {
 			count++;
-			singers[aux2] = aux2;
+			singers[$i] = $i;
 		}
 	}
 }
 
 END {
-	for (i in singers) {
+	n = asort(singers);
+
+	for (i = 1; i <= n; i++) {
 		print singers[i];
 	}
 
 	print "Total: " count;
-}
-
-
-function subString(str, sequence, replace) {
-	return gensub(sequence, replace, "g", str); 
 }
