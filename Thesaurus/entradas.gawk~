@@ -27,20 +27,20 @@ BEGIN {
 END {
 	for (i in entries) {
 		if (length(i) > 1) {
-			printf(fmtE, i) > "index.html";
+		printf(fmtE, i) > "index.html";
 		
-			printf(fmtCD, "Categorias:") > "index.html";
+		printf(fmtCD, "Categorias:") > "index.html";
 		
-			for (c in entries[i]) {
-				if (length(c) > 1) {
-					printf(fmtLI, c) > "index.html";
-				}
+		for (c in entries[i]) {
+			if (length(c) > 1) {
+				printf(fmtLI, c) > "index.html";
 			}
-	
-			printf(fmtCD, "Definições:") > "index.html";
+		}
 
-			for (j in entries[i]) {
-				for (w in entries[i][j]) {
+		printf(fmtCD, "Definições:") > "index.html";
+
+		for (j in entries[i]) {
+			for (w in entries[i][j]) {
 					if (length(w) > 1) {
 						printf(fmtLI, w) > "index.html";
 					}

@@ -38,4 +38,3 @@ function removeSpaces(str) {
 
 	return str;
 }
-

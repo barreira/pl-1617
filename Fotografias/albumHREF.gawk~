@@ -57,5 +57,6 @@ function removeSpaces(str) {
 
 function removeInvalidChars(str) {
 	sub("[:\\t]", "", str);
+	#sub("\\t", "", str);
 	return str;
 }
