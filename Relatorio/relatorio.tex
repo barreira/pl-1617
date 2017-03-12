@@ -6,17 +6,15 @@
 \usepackage{indentfirst}
 \setlength{\parindent}{6ex}
 \lstset{basicstyle=\ttfamily,
-  showstringspaces=false,
-  commentstyle=\color{red},
-  keywordstyle=\color{blue},
-  tabsize=3
-}
+  	    showstringspaces=false,
+  		commentstyle=\color{red},
+  		keywordstyle=\color{blue},
+  		tabsize=3}
 
 \title{\textbf{Processamento de Linguagens - TP1a}}
-\author{\begin{tabular}{authors}
-            \textbf{} Carlos Pereira (A61887) \\ João Barreira (A73831) \\ Rafael Costa (A61799)
-        \end{tabular}
-       }
+\author{\begin{tabular}{c}
+	    	Carlos Pereira (A61887) \\ João Barreira (A73831) \\ Rafael Costa (A61799)
+	    \end{tabular}}
 \date{Março 2017}
 
 \begin{document}
@@ -25,15 +23,21 @@
 
 \section{Processador de transações da Via Verde}
 
+\subsubsection{Expressões regulares}
+
+\subsubsection{Ações semânticas}
+
+\subsubsection{Estruturas de dados globais}
+
+\subsubsection{Filtro de texto}
 
 
-\section{Album Fotográfico em HTML}
 
+\section{Álbum fotográfico em HTML}
 
+\section{Autores musicais}
 
-\section{Autores Musicais}
-
-Existe uma diretoria com vários ficheiros de extensão '\emph{.lyr}', que contêm a letra de canções precedida de 2 ou mais campos de meta-informação (1 por linha). Esta informção pode ser: título da canção, autor da letra, cantor, etc. A letra da música e a meta-informação estão separadas por uma linha em branco.
+Existe uma diretoria com vários ficheiros de extensão '\emph{.lyr}', que contêm a letra de canções precedida de 2 ou mais campos de meta-informação (1 por linha). Esta informação pode ser: título da canção, autor da letra, cantor, etc. A letra da música e a meta-informação estão separadas por uma linha em branco.
 
 Foi feito um Processador de Texto com o auxílio do \emph{GAWK} para ler todos os ficheiros '\emph{.lyr}' e obter informações sobre os cantores, autores e títulos de canções.
 
@@ -41,23 +45,23 @@ Foi feito um Processador de Texto com o auxílio do \emph{GAWK} para ler todos o
 
 Aqui foi feito um processador que recebe ficheiros de letra de música como \emph{input} e escreve o total e os nomes de todos os cantores.
 
-\subsubsection{Expressões Regulares}
+\subsubsection{Expressões regulares}
 
 Após a análise de alguns possíveis ficheiros de entrada, verificou-se que as linhas de informações relativas aos nomes dos cantores começam por \emph{"singer:"}, onde os nomes estão separados por espaços em branco, dois pontos, vírgulas ou por pontos e vírgulas, daí os termos utilizado como \emph{Field Separator}.
 
 A informação que queremos retirar está em linhas que começam por \emph{"singer:"}.
 
-\subsubsection{Ações Semânticas}
+\subsubsection{Ações semânticas}
 
 Sempre que o processador encontra um registo iniciado por \emph{"singer:"}, percorrem-se todos os campos desse registo. Para cada um destes campos, retiram-se os carateres desnecessários. Depois, caso o registo não exista no \emph{array} dos nomes dos cantores, é adicionado a esse \emph{array} e o contador de todos os cantores é incrementado.
 
 No fim, antes de se imprimirem os resultados, o \emph{array} com os nomes dos cantores é ordenado.
 
-\subsubsection{Estruturas de Dados Globais}
+\subsubsection{Estruturas de dados globais}
 
 Foram utilizadas duas estruturas de dados globais: um \emph{array} \emph{singers}, em que o índice são os nomes de todos os cantores e uma variável \emph{total} que é utilizada como contador de cantores.
 
-\subsubsection{Filtro de Texto}
+\subsubsection{Filtro de texto}
 
 \begin{lstlisting}[language=bash]
 BEGIN {
@@ -91,23 +95,23 @@ END {
 
 Fez-se um processador que recebe ficheiros de letra de música como \emph{input} e calcula o número de canções de cada autor.
 
-\subsubsection{Expressões Regulares}
+\subsubsection{Expressões regulares}
 
 Verificou-se que as linhas de informações relativas aos nomes dos autores começam por \emph{"author:"}. Tal como no caso dos cantores, os nomes estão separados por espaços em branco, dois pontos, vírgulas ou por pontos e vírgulas, daí os termos utilizado como \emph{Field Separator}.
 
 As informações que pretendemos são retiradas de registos que começam por \emph{"author:"}.
 
-\subsubsection{Ações Semânticas}
+\subsubsection{Ações semânticas}
 
 Ao encontrar um registo iniciado por \emph{"author:"}, o processador percorre todos os campos desse registo. Para cada um destes campos, retiram-se os carateres desnecessários. Depois, caso o registo não seja vazio, ou seja, conhecem-se os autores da música, a posição correspondente ao nome do autor no \emph{array} de autores é incrementado. Caso contrário, incrementa-se a posição correspondente ao "Autor Desconhecido".
 
 No fim, imprimem-se os resultados da seguinte forma: nome do autor seguido do número de músicas associadas a ele.
 
-\subsubsection{Estruturas de Dados Globais}
+\subsubsection{Estruturas de dados globais}
 
 Temos como estrutura global um \emph{array} \emph{authors}, em que o índice é o nome de um autor e o valor correspondente ao número de músicas associado a esse autor. 
 
-\subsubsection{Filtro de Texto}
+\subsubsection{Filtro de texto}
 
 \begin{lstlisting}[language=bash]
 
@@ -142,7 +146,7 @@ END {
 
 \paragraph{} O processador recebe ficheiros de letra de música como \emph{input} e escreve, para cada autor, o título das suas canções.
 
-\subsubsection{Expressões Regulares}
+\subsubsection{Expressões regulares}
 
 Aqui, as linhas de informação relativas ao nome de uma canção começam por   \emph{"title:"} e as dos nomes dos autores começam por \emph{"author:"}.
 
@@ -150,21 +154,21 @@ Da mesma maneira que se fez nos exercícios anteriores, os nomes estão separado
 
 As informações que pretendemos são retiradas de registos que começam por \emph{"title:"} e por \emph{"author:"}.
 
-\subsubsection{Ações Semânticas}
+\subsubsection{Ações semânticas}
 
 O processador, a cada registo que comece por \emph{"title:"}, atribui esse campo à variável global \emph{song}. Aqui fica guardado o título da canção. Depois retira os carateres que são considerados desnecessários.
 
-Aos registos que sejam iniciados em \emph{author:}, começa a percorrê-lo a partir do seu segundo campos (visto que ser \emph{author:}). Cada um destes campos é o nome de um autor. Depois, a cada um destes que não seja vazio, retiram-se os carateres desnecessários e é adicionado à variável global \empg{songs}, na linha correspondente ao nome do autor, o  conteúdo na variável \emph{song} que se traduz no título da canção.
+Aos registos que sejam iniciados em \emph{author:}, começa a percorrê-lo a partir do seu segundo campos (visto que ser \emph{author:}). Cada um destes campos é o nome de um autor. Depois, a cada um destes que não seja vazio, retiram-se os carateres desnecessários e é adicionado à variável global \emph{songs}, na linha correspondente ao nome do autor, o  conteúdo na variável \emph{song} que se traduz no título da canção.
 
 Caso não se tenha o nome do cantor, ou seja, o campo é vazio, adiciona-se o título da canção à linha do "Autor Desconhecido".
 
-No fim, para cada uma das linhas da matriz \empg{songs}, imprime-se para cada linha, o seu índice e os conteúdos de cada uma das suas colunas.
+No fim, para cada uma das linhas da matriz \emph{songs}, imprime-se para cada linha, o seu índice e os conteúdos de cada uma das suas colunas.
 
-\subsubsection{Estruturas de Dados Globais}
+\subsubsection{Estruturas de dados globais}
 
 Utilizaram-se 2 variáveis globais: a variável \emph{song} que guarda o título de uma canção e uma matriz \emph{songs}. Nesta matriz, as linhas correspondem a nome de autores e as respetivas colunas correspondem aos títulos das canções associadas ao autor dessa linha.
 
-\subsubsection{Filtro de Texto}
+\subsubsection{Filtro de texto}
 
 \begin{lstlisting}[language=bash]
 BEGIN {
@@ -217,12 +221,12 @@ END {
 
 \section{Dicionauro}
 
-\subsubsection{Expressões Regulares}
+\subsubsection{Expressões regulares}
 
-\subsubsection{Ações Semânticas}
+\subsubsection{Ações semânticas}
 
-\subsubsection{Estruturas de Dados Globais}
+\subsubsection{Estruturas de dados globais}
 
-\subsubsection{Filtro de Texto}
+\subsubsection{Filtro de texto}
 
 \end{document}
