@@ -25,7 +25,6 @@ BEGIN {
 END {
 	for (i in array) {
 		aux = removeInvalidChars(i);
-		print aux;	
 
 		printf(fmtHREF, aux, i) > "index.html";
 
@@ -57,6 +56,5 @@ function removeSpaces(str) {
 
 function removeInvalidChars(str) {
 	sub("[:\\t]", "", str);
-	#sub("\\t", "", str);
 	return str;
 }

@@ -8,14 +8,14 @@ BEGIN {
 }
 
 /<foto / {
-	file = $3;
+	image = $3;
 }
 
 /<quem>/ {
 	$3 = removeSpaces($3);
 
 	printf(fmtLI, $3) > "index.html";
-	printf(fmtI, file) > "index.html";
+	printf(fmtI, image) > "index.html";
 }
 
 /<onde>/ && !(($3 = removeSpaces($3)) in locals) {
