@@ -15,7 +15,7 @@ BEGIN {
 
 /<quem>/ && (length($3) < 200) {
 	$3 = removeSpaces($3);
-	array[$3][image] = 0;
+	album[$3][image] = 0;
 }
 
 /<onde>/ && !(($3 = removeSpaces($3)) in locals) {
@@ -23,14 +23,14 @@ BEGIN {
 }
 
 END {
-	for (i in array) {
+	for (i in album) {
 		aux = removeInvalidChars(i);
 
 		printf(fmtHREF, aux, i) > "index.html";
 
 		print enc > aux".html";
 
-		for (j in array[i]) {
+		for (j in album[i]) {
 			printf(fmtIMG, j) > aux".html";
 		}
 
