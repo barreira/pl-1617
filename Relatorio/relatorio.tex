@@ -4,40 +4,204 @@
 \usepackage{listings}
 \usepackage{xcolor}
 \usepackage{indentfirst}
+\usepackage{hyperref}
 \setlength{\parindent}{6ex}
 \lstset{basicstyle=\ttfamily,
-  	    showstringspaces=false,
-  		commentstyle=\color{red},
-  		keywordstyle=\color{blue},
-  		tabsize=3}
+  showstringspaces=false,
+  commentstyle=\color{red},
+  keywordstyle=\color{blue},
+  tabsize=3
+}
 
 \title{\textbf{Processamento de Linguagens - TP1a}}
 \author{\begin{tabular}{c}
-	    	Carlos Pereira (A61887) \\ João Barreira (A73831) \\ Rafael Costa (A61799)
-	    \end{tabular}}
+            \textbf{} Carlos Pereira (A61887) \\ João Barreira (A73831) \\ Rafael Costa (A61799)
+        \end{tabular}
+       }
 \date{Março 2017}
 
 \begin{document}
 
 \maketitle
 
+\section{Introdução}
+
+O presente trabalho consiste no desenvolvimento de filtros de texto recorrendo à ferramenta \emph{GAWK}. Os diferentes filtros devem ser produzidos com o recurso a \emph{Expressões Regulares} para detetar \emph{padrões de frases}. Para aumentar estas capacidades, foram propostos quatro exercícios distintos. Neste trabalho, optou-se por resolver todos estes exercícios.
+
+Ao longo deste relatório explicaremos, com detalhe, a resolução de cada exercício proposto. Para cada um é dada ênfase às \emph{Expressões Regulares} e \emph{Acções Semânticas}, bem como eventuais estruturas e variáveis auxiliares utilizadas. Cada secção é também acompanhada pelo código completo do filtro de texto e de um ou mais exemplos da sua execução.
+
+
+
 \section{Processador de transações da Via Verde}
 
-\subsubsection{Expressões regulares}
-
-\subsubsection{Ações semânticas}
-
-\subsubsection{Estruturas de dados globais}
-
-\subsubsection{Filtro de texto}
 
 
+\section{Album Fotográfico em HTML}
 
-\section{Álbum fotográfico em HTML}
+O principal objetivo deste exercício consiste em extrair toda a meta-informação de um ficheiro, em formato \emph{XML}, e gerar uma página \emph{HTML} com essa meta-informação. Esse ficheiro, chamado \emph{lengenda.xml}, possui informação acerca de um conjunto de ficheiros de fotografias e, para cada uma destas, o nome das pessoas envolvidas e o local onde foram tiradas. A página \emph{HTML} deve apresentar todas a fotos listadas no ficheiro \emph{XML}, bem como as pessoas envolvidas em cada uma. Para além disso, deve ser gerada a lista de todos os locais envolvidos, sem repetições. De referir que os ficheiros das fotografias encontram-se em \url{http://npmp.epl.di.uminho.pt/images/}.
 
-\section{Autores musicais}
+Optou-se por gerar a página \emph{HTML} de duas maneiras distintas: através do comando \emph{IMG} e através de uma ancora como hiper-link que associe o nome do fotografado ao ficheiro. Apresentam-se, nas secções seguintes, os detalhes de cada uma destas implementações.
 
-Existe uma diretoria com vários ficheiros de extensão '\emph{.lyr}', que contêm a letra de canções precedida de 2 ou mais campos de meta-informação (1 por linha). Esta informação pode ser: título da canção, autor da letra, cantor, etc. A letra da música e a meta-informação estão separadas por uma linha em branco.
+
+\subsection{Página \emph{HTML} com comandos \emph{IMG}}
+
+Esta implementação gera uma página \emph{HTML} com o seguinte formato:
+
+\begin{lstlisting}[language=html]
+    <LI><b>NomeDaPessoa</b></LI>
+        <center><img src="NomeDoFicheiro.jpg"/></center>
+\end{lstlisting}
+
+
+\subsubsection{Expressões Regulares e Acções Semânticas}
+
+\begin{itemize}
+    \item \textbf{"[\textless\textgreater/"]"} - Esta expressão é usada como \emph{FIELD SEPARATOR}. Desta maneira, torna-se bastante simples extrair do ficheiro \emph{XML} atributos de cada \emph{tag}, bem como nomes de ficheiros entre aspas. 
+    \item \textbf{/\textless foto / } - Identifica todas as linhas com informação relativa a uma foto. Como se pode verificar, na definição do \emph{FIELD SEPARATOR}, o nome do ficheiro de uma foto é armazenado no campo número três. Basta armazenar-se o valor desse campo numa variável auxiliar.
+    \item \textbf{/\textless quem\textgreater/} - A identificação dos sujeitos envolvidos numa foto é armazenada no campo número três. Usa-se uma função auxiliar para limpar todos os espaços em branco tanto no início como fim da descrição. No final, é acrescentada a informação de uma imagem em formato \emph{HTML} a um ficheiro chamado \emph{index.html}.
+    \item \textbf{/\textless onde\textgreater/ && !((\$3 = removeSpaces(\$3)) in locals)} - Filtra todas as linhas que possuam informações do local onde foi tirada uma foto. Uma linha é selecionada se contiver informação de um local que ainda não tenha sido armazenado. Caso estas condições se verifiquem, o local (presente no campo número três) é guardado num \emph{array}. 
+\end{itemize}
+
+
+\subsubsection{Estruturas de Dados Globais}
+
+As estruturas globais envolvidas neste exercício são as seguintes: um \emph{array locals} para guardar todos os locais (sem repetições) onde foram tiradas as fotos e quatro variáveis globais. Três das variáveis (\emph{fmtLI}, \emph{fmtI} e \emph{end}) possuem valores constantes relativos a código \emph{HTML}. A quarta variável (\emph{image}) serve para guardar o ficheiro da última foto lida.
+
+
+\subsubsection{Filtro de Texto}
+
+\begin{lstlisting}[language=bash]
+BEGIN {
+	IGNORECASE = 1;
+	fmtLI = "<li><b>%s</b></li>\n";
+	fmtI = "<center><img src=
+	        \"http://npmp.epl.di.uminho.pt/images/%s\"/> 
+	        </center>\n"
+	FS = "[<>\"]";
+	end = "</body></html>";
+	print "<html><head><meta charset='UTF-8'/>
+	       </head><body>" > "index.html";
+}
+
+/<foto / {
+	file = $3;
+}
+
+/<quem>/ {
+	$3 = removeSpaces($3);
+
+	printf(fmtLI, $3) > "index.html";
+	printf(fmtI, file) > "index.html";
+}
+
+/<onde>/ && !(($3 = removeSpaces($3)) in locals) {
+	locals[$3] = 0;
+}
+
+END {
+	print "<p></p>\n<b>Locais:</b>\n" > "index.html";
+	
+	for (i in locals) {
+		printf("<li>%s</li>\n", i) > "index.html";
+	}
+
+	print end > "index.html";
+}
+
+function removeSpaces(str) {
+	sub("^ +", "", str);
+	sub(" +$", "", str);
+
+	return str;
+}
+
+\end{lstlisting}
+
+
+
+\subsection{Página \emph{HTML} com ancoras}
+Esta implementação é muito semelhante à implementação com o comando \emph{IMG} mas, acrescenta uma nova funcionalidade. O conjunto de pessoas envolvidas no album é apresentado sem repetições. Cada pessoa tem a si associada uma página \emph{HTML} que dispõe todos as fotos em que está presente. De seguida faremos referência apenas às expressões regulares e acções semânticas que divirgem da implementação com \emph{IMG}.
+
+
+\subsubsection{Expressões Regulares e Acções Semânticas}
+A única expressão regular que é distinta das expressões regulares da outra implementação é a seguinte: \textbf{/\textless quem\textgreater/ && (length(\$3) \textless 200)}. Esta expressão filtra todas as linhas com a \emph{tag quem} em que o nome da pessoa envolvida não ultrapasse os duzentos carateres (de modo a evitar erros ao guardar ficheiros com um nome demasiado extenso).  
+
+
+\subsubsection{Estruturas de Dados Globais}
+Tal como a implementação com \emph{IMG} são utilizadas um conjunto de variáveis constantes que contêm código \emph{HTML}, uma variável para guardar o nome do ficheiro de uma foto e um \emph{array} de locais. Para além destas estruturas é utilzado um \emph{array} de duas dimensões \emph{album[quem][images]}, que associa a uma pessoa um conjunto de fotos onde está presente.
+
+\subsection{Filtro de Texto}
+\begin{lstlisting}[language=bash]
+BEGIN {
+	IGNORECASE = 1;
+	enc = "<html> <head> <meta charset='UTF-8'/>
+	       </head> <body>"
+	fmtHREF = "<p><a href=\"%s.html\"> %s </a></p>\n";
+	fmtIMG = "<li><center><img 
+	          src=\"http://npmp.epl.di.uminho.pt/images/%s\"/> 
+	          </center></li>\n"
+	FS = "[<>\"]";
+	end = "</body></html>";
+	print enc > "index.html";
+}
+
+
+/<foto / {
+	image = $3;
+}
+
+/<quem>/ && (length($3) < 200) {
+	$3 = removeSpaces($3);
+	array[$3][image] = 0;
+}
+
+/<onde>/ && !(($3 = removeSpaces($3)) in locals) {
+	locals[$3] = 0;
+}
+
+END {
+	for (i in array) {
+		aux = removeInvalidChars(i);
+
+		printf(fmtHREF, aux, i) > "index.html";
+
+		print enc > aux".html";
+
+		for (j in array[i]) {
+			printf(fmtIMG, j) > aux".html";
+		}
+
+		print end > aux".html";
+	}
+
+	print "<p></p>\n<b>Locais:</b>\n" > "index.html";
+	
+	for (x in locals) {
+		printf("<li>%s</li>\n", x) > "index.html";
+	}
+
+	print end > "index.html";
+}
+
+function removeSpaces(str) {
+	sub("^ +", "", str);
+	sub(" +$", "", str);
+
+	return str;
+}
+
+
+function removeInvalidChars(str) {
+	sub("[:\\t]", "", str);
+	return str;
+}
+
+\end{lstlisting}
+
+
+\section{Autores Musicais}
+
+Existe uma diretoria com vários ficheiros de extensão '\emph{.lyr}', que contêm a letra de canções precedida de 2 ou mais campos de meta-informação (1 por linha). Esta informção pode ser: título da canção, autor da letra, cantor, etc. A letra da música e a meta-informação estão separadas por uma linha em branco.
 
 Foi feito um Processador de Texto com o auxílio do \emph{GAWK} para ler todos os ficheiros '\emph{.lyr}' e obter informações sobre os cantores, autores e títulos de canções.
 
@@ -45,23 +209,23 @@ Foi feito um Processador de Texto com o auxílio do \emph{GAWK} para ler todos o
 
 Aqui foi feito um processador que recebe ficheiros de letra de música como \emph{input} e escreve o total e os nomes de todos os cantores.
 
-\subsubsection{Expressões regulares}
+\subsubsection{Expressões Regulares}
 
 Após a análise de alguns possíveis ficheiros de entrada, verificou-se que as linhas de informações relativas aos nomes dos cantores começam por \emph{"singer:"}, onde os nomes estão separados por espaços em branco, dois pontos, vírgulas ou por pontos e vírgulas, daí os termos utilizado como \emph{Field Separator}.
 
 A informação que queremos retirar está em linhas que começam por \emph{"singer:"}.
 
-\subsubsection{Ações semânticas}
+\subsubsection{Ações Semânticas}
 
 Sempre que o processador encontra um registo iniciado por \emph{"singer:"}, percorrem-se todos os campos desse registo. Para cada um destes campos, retiram-se os carateres desnecessários. Depois, caso o registo não exista no \emph{array} dos nomes dos cantores, é adicionado a esse \emph{array} e o contador de todos os cantores é incrementado.
 
 No fim, antes de se imprimirem os resultados, o \emph{array} com os nomes dos cantores é ordenado.
 
-\subsubsection{Estruturas de dados globais}
+\subsubsection{Estruturas de Dados Globais}
 
 Foram utilizadas duas estruturas de dados globais: um \emph{array} \emph{singers}, em que o índice são os nomes de todos os cantores e uma variável \emph{total} que é utilizada como contador de cantores.
 
-\subsubsection{Filtro de texto}
+\subsubsection{Filtro de Texto}
 
 \begin{lstlisting}[language=bash]
 BEGIN {
@@ -95,23 +259,23 @@ END {
 
 Fez-se um processador que recebe ficheiros de letra de música como \emph{input} e calcula o número de canções de cada autor.
 
-\subsubsection{Expressões regulares}
+\subsubsection{Expressões Regulares}
 
 Verificou-se que as linhas de informações relativas aos nomes dos autores começam por \emph{"author:"}. Tal como no caso dos cantores, os nomes estão separados por espaços em branco, dois pontos, vírgulas ou por pontos e vírgulas, daí os termos utilizado como \emph{Field Separator}.
 
 As informações que pretendemos são retiradas de registos que começam por \emph{"author:"}.
 
-\subsubsection{Ações semânticas}
+\subsubsection{Ações Semânticas}
 
 Ao encontrar um registo iniciado por \emph{"author:"}, o processador percorre todos os campos desse registo. Para cada um destes campos, retiram-se os carateres desnecessários. Depois, caso o registo não seja vazio, ou seja, conhecem-se os autores da música, a posição correspondente ao nome do autor no \emph{array} de autores é incrementado. Caso contrário, incrementa-se a posição correspondente ao "Autor Desconhecido".
 
 No fim, imprimem-se os resultados da seguinte forma: nome do autor seguido do número de músicas associadas a ele.
 
-\subsubsection{Estruturas de dados globais}
+\subsubsection{Estruturas de Dados Globais}
 
 Temos como estrutura global um \emph{array} \emph{authors}, em que o índice é o nome de um autor e o valor correspondente ao número de músicas associado a esse autor. 
 
-\subsubsection{Filtro de texto}
+\subsubsection{Filtro de Texto}
 
 \begin{lstlisting}[language=bash]
 
@@ -146,7 +310,7 @@ END {
 
 \paragraph{} O processador recebe ficheiros de letra de música como \emph{input} e escreve, para cada autor, o título das suas canções.
 
-\subsubsection{Expressões regulares}
+\subsubsection{Expressões Regulares}
 
 Aqui, as linhas de informação relativas ao nome de uma canção começam por   \emph{"title:"} e as dos nomes dos autores começam por \emph{"author:"}.
 
@@ -154,7 +318,7 @@ Da mesma maneira que se fez nos exercícios anteriores, os nomes estão separado
 
 As informações que pretendemos são retiradas de registos que começam por \emph{"title:"} e por \emph{"author:"}.
 
-\subsubsection{Ações semânticas}
+\subsubsection{Ações Semânticas}
 
 O processador, a cada registo que comece por \emph{"title:"}, atribui esse campo à variável global \emph{song}. Aqui fica guardado o título da canção. Depois retira os carateres que são considerados desnecessários.
 
@@ -164,11 +328,11 @@ Caso não se tenha o nome do cantor, ou seja, o campo é vazio, adiciona-se o t�
 
 No fim, para cada uma das linhas da matriz \emph{songs}, imprime-se para cada linha, o seu índice e os conteúdos de cada uma das suas colunas.
 
-\subsubsection{Estruturas de dados globais}
+\subsubsection{Estruturas de Dados Globais}
 
 Utilizaram-se 2 variáveis globais: a variável \emph{song} que guarda o título de uma canção e uma matriz \emph{songs}. Nesta matriz, as linhas correspondem a nome de autores e as respetivas colunas correspondem aos títulos das canções associadas ao autor dessa linha.
 
-\subsubsection{Filtro de texto}
+\subsubsection{Filtro de Texto}
 
 \begin{lstlisting}[language=bash]
 BEGIN {
@@ -221,12 +385,149 @@ END {
 
 \section{Dicionauro}
 
-\subsubsection{Expressões regulares}
+Uma diretoria designada por \emph{Dicionauro} contém um conjunto de ficheiros com a extensão '\emph{.txt}' com inúmeras entradas em Português de termos de um \emph{Thesaurus}. Cada termo é iniciado pela sigla '\emph{PT}' e tem a si associado uma ou mais categorias. Um termo pode possuir um conjunto de definições. Uma definição é uma linha iniciada pela sigla '\emph{Def}'. 
 
-\subsubsection{Ações semânticas}
+Descrevem-se, de seguida, os exercícios propostos que têm como base a diretoria \emph{Dicionauro}.  
 
-\subsubsection{Estruturas de dados globais}
 
-\subsubsection{Filtro de texto}
+\subsection{Criação de uma página \emph{HTML} com todos os termos e suas respetivas categorias e definições}
+
+A estrutura da página \emph{HTML} criada neste exercício é a seguinte:
+
+\begin{lstlisting}[language=html]
+<p></p><b>Termo</b>
+<p></p><b>Categorias:</b>
+<li>Categoria 1</li>
+<li>Categoria 2</li>
+          .
+          .
+          .
+        
+<p></p><b>Definicoes:</b>
+<li>Definicao 1</li>
+<li>Definicao 2</li>
+          .
+          .
+          .
+\end{lstlisting}
+
+
+Ou seja, na leitura de todos os ficheiros presentes na diretoria \emph{Dicionauro} não se devem apresentar termos repetidos, mas sim acrescentar a um termo que já exista novas categorias e definções.
+
+
+\subsubsection{Expressões Regulares e Acções Semânticas}
+
+\begin{itemize}
+    \item \textbf{"[ \textgreater!\textless]*pt(\_br)?(\_pt)?"} - Expressão regular atribuída ao \emph{FIELD SEPARATOR}. Ao inspecionarmos vários ficheiros da diretoria em questão, verificamos que nem todos seguem o mesmo padrão. A maior parte dos ficheiros apresenta as linhas respetivas a um termo iniciadas pela sigla '\emph{PT}'. No entanto, verificamos que um pequeno número de ficheiros possuía a sigla '\emph{PT}' precedida ou sucedida pelo seguinte conjunto de carateres: \emph{\textless, \textgreater, ! e " "}. Para além disso, uma pequena minoria apresentava distinções para termos em portugês e em brasileiro, ou seja, '\emph{PT\_PT}' e '\emph{PT\_BR}'. A expressão regular descrita permite tratar cada um destes diferentes tipos de termos. 
+    \item \textbf{/\^{}pt/\hspace{0.5em}\textbar\textbar\hspace{0.5em}/\^{}[\textgreater\textless! ]*pt/} - Filtra todos as linhas correspondentes a um termo. Tal como foi, falado acima, existem vários formatos para uma linha com um termo. Todos os espaços em branco (tanto no início como no final) de um termo são extraídos, bem como todos os \emph{tabs} que possua. Depois dessa extração, o termo é guardado numa variável auxiliar.
+    \item \textbf{/[ \textless\textgreater!?]*def/} - Esta expressão permite selecionar todas as linhas que contenham uma definição. Novamente a sintaxe de uma linha que contém uma definição pode ser constituída por um conjunto diferente de carateres. Como o \emph{FIELD SEPARATOR} foi definido de modo a selecionar todos os termos de um ficheiro, é necessário recorrer-se ao uso da função \emph{split} para se extrair a definição propriamente dita. Basta usar-se esta função para o campo número zero (todo o registo) e fazer-se o \emph{split} pela sequência de carateres "\emph{def}". 
+    \item \textbf{/[ \textless\textgreater!?-]*catgra/} - Seleciona todas as linhas que contêm uma categoria. Tal como para uma definição, é realizado um \emph{split} no campo número zero, mas desta vez pela sequência de carateres "\emph{catgra}".
+\end{itemize}
+
+
+\subsubsection{Estruturas de Dados Globais}
+
+Este exercício recorre ao uso de cinco variáveis auxiliares, de valor constante, para armazenarem meramente código \emph{HTML}. São utilizadas mais três variáveis (\emph{entry}, \emph{def} e \emph{catg}) para guardarem, respetivamente, os valores de um termo, definição e uma categoria. A estrutura mais relevante para este exercício consiste num \emph{array} de três dimensões \emph{entries[entry][catg][def]}. Cada termo deste \emph{array} tem a si associado um conjunto de categorias. Por sua vez, cada categoria tem a si associada um conjunto de definições. Esta estruturação é útil em casos em que uma nova categoria é definida para um mesmo termo noutro ficheiro. De modo a facilitar a compreensão desta estrutura ilustraremos o seguinte exemplo: suponha-se que existem três ficheiros distintos ("A", "B" e "C"). Ambos os ficheiros possuem o mesmo termo ("\emph{corpo}") e um conjunto de definições distintas para este. Suponha-se, também, que no ficheiro "A" a categoria do termo é "\emph{nl}" (tal como no ficheiro "B") e que no ficheiro "C" não há nenhuma informação relativa à categoria do termo. Sendo assim o \emph{array} possui as seguintes configurações: \emph{entries["corpo"]["nl"]["conjunto de definições do ficheiro "A" e "B""]} e \emph{entries["corpo"][\" "]["conjunto de definições do ficheiro "C"]}.
+
+
+\subsubsection{Filtro de Texto}
+
+\begin{lstlisting}[language=bash]
+BEGIN {
+	IGNORECASE = 1;
+	fmtLI = "<li styl, =\"margin-left:50px\">%s</li>\n";
+	fmtE = "<p></p><b style=\"font-size:150%\">%s</b>\n"; 
+	fmtCD = "<p></p><b style=\"margin-left:25px\">%s</b>\n";
+	FS = "^[> !<]*pt(_br)?(_pt)?";
+	end = "</body></html>";
+	print "<html><head><meta charset='UTF-8'/>
+	       </head><body>" > "index.html";
+}
+
+
+/^pt/ || /^[>< !]*pt/ {
+	entry = removeWhiteSpaces($2);
+}
+
+/[> <!?]*def/ {
+	split($0, target, "def");
+	def = removeWhiteSpaces(target[2]);
+	entries[entry][catg][def] = def;
+}
+
+/[> <!?-]*catgra/ {
+	split($0, target, "catgra");
+	catg = removeWhiteSpaces(target[2]);
+}
+
+END {
+	for (i in entries) {
+		if (length(i) > 1) {
+		printf(fmtE, i) > "index.html";
+		
+		printf(fmtCD, "Categorias:") > "index.html";
+		
+		for (c in entries[i]) {
+			if (length(c) > 1) {
+				printf(fmtLI, c) > "index.html";
+			}
+		}
+
+		printf(fmtCD, "Definições:") > "index.html";
+
+		for (j in entries[i]) {
+			for (w in entries[i][j]) {
+					if (length(w) > 1) {
+						printf(fmtLI, w) > "index.html";
+					}
+				} 
+			}
+		}
+	}
+
+	print end > "index.html";
+}
+
+function removeWhiteSpaces(str) {
+	sub("\\t", "", str);
+	sub("^ +", "", str);
+	sub(" +$", "", str);
+
+	return str;
+}
+
+\end{lstlisting}
+
+\subsection{Listagem de todos os diferentes domínios e respetivo número de entradas}
+
+\subsubsection{Expressões Regulares e Acções Semânticas}
+
+\subsubsection{Estruturas de Dados Globais}
+
+\subsubsection{Filtro de Texto}
+
+\begin{lstlisting}[language=bash]
+BEGIN {
+	IGNORECASE = 1;
+	FS = "^[&> !<]*dom +";
+}
+
+/^[&>< !]*dom / && length($2) > 0 {
+	dom[norm($2)]++;
+}
+
+END {
+	for (i in dom) {
+		print i ": " dom[i];
+	}
+}
+
+function norm(str) {
+	sub("^ +", "", str);
+	sub(" +$", "", str);
+	return tolower(str);
+}
+
+\end{lstlisting}
 
 \end{document}
