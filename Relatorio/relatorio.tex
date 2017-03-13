@@ -24,15 +24,18 @@
 
 \maketitle
 
+\vskip 355
+\renewcommand*\contentsname{Índice}
+\tableofcontents
+
+\vskip 347
 \section{Introdução}
 
 O presente trabalho consiste no desenvolvimento de filtros de texto recorrendo à ferramenta \emph{GAWK}. Os diferentes filtros devem ser produzidos com o recurso a \emph{Expressões Regulares} para detetar \emph{padrões de frases}. Para aumentar estas capacidades, foram propostos quatro exercícios distintos. Neste trabalho, optou-se por resolver todos estes exercícios.
 
 Ao longo deste relatório explicaremos, com detalhe, a resolução de cada exercício proposto. Para cada um é dada ênfase às \emph{Expressões Regulares} e \emph{Acções Semânticas}, bem como eventuais estruturas e variáveis auxiliares utilizadas. Cada secção é também acompanhada pelo código completo do filtro de texto e de um ou mais exemplos da sua execução.
 
-
-
-\vspace{15}
+\vskip 40
 \section{Processador de transações da Via Verde}
 
 O ficheiro \emph{viaverde.xml} contém o extrato mensal de um cliente do serviço da Via Verde, fazendo referência à data e aos locais de entrada e saída (e.g. estrada ou parque), ao valor pago e à matrícula do veículo, entre outros.
@@ -52,7 +55,7 @@ Foi feito um processador que lê o ficheiro \emph{XML} e apresenta o número tot
 
 \subsubsection{Estrutura de Dados Globais}
 
-Neste exercício apenas utilizámos um array bidimensional para guardar o mês e o dia de cada uma das entradas registadas no ficheiro \emph{XML}, bem como duas variáveis auxiliares \emph{auxDay} e \emph{auxMonth} que servem apenas para fazer com que o valor retirado dos campos 2 e 3 seja um inteiro (e não uma \emph{string}).
+Neste exercício apenas utilizámos um array bidimensional para guardar o mês e o dia de cada uma das entradas registadas no ficheiro \emph{XML}, bem como duas variáveis auxiliares \emph{auxDay} e \emph{auxMonth} que servem apenas para fazer com que o valor retirado dos campos 2 e 3 seja um inteiro (e não uma string).
 
 \subsubsection{Filtro de Texto}
 
@@ -159,8 +162,7 @@ END {
 \end{lstlisting}
 
 
-
-\vspace{15}
+\vskip 20
 \section{Album fotográfico em HTML}
 
 O principal objetivo deste exercício consiste em extrair toda a meta-informação de um ficheiro, em formato \emph{XML}, e gerar uma página \emph{HTML} com essa meta-informação. Esse ficheiro, chamado \emph{lengenda.xml}, possui informação acerca de um conjunto de ficheiros de fotografias e, para cada uma destas, o nome das pessoas envolvidas e o local onde foram tiradas. A página \emph{HTML} deve apresentar todas a fotos listadas no ficheiro \emph{XML}, bem como as pessoas envolvidas em cada uma. Para além disso, deve ser gerada a lista de todos os locais envolvidos, sem repetições. De referir que os ficheiros das fotografias encontram-se em \url{http://npmp.epl.di.uminho.pt/images/}.
@@ -323,7 +325,7 @@ function removeInvalidChars(str) {
 
 \end{lstlisting}
 
-\vspace{15}
+\vskip 30
 \section{Autores musicais}
 
 Existe uma diretoria com vários ficheiros de extensão '\emph{.lyr}', que contêm a letra de canções precedida de 2 ou mais campos de meta-informação (1 por linha). Esta informção pode ser: título da canção, autor da letra, cantor, etc. A letra da música e a meta-informação estão separadas por uma linha em branco.
@@ -507,7 +509,7 @@ END {
 \end{lstlisting}
 
 
-\vspace{15}
+\vskip 30
 \section{Dicionauro}
 
 Uma diretoria designada por \emph{Dicionauro} contém um conjunto de ficheiros com a extensão '\emph{.txt}' com inúmeras entradas em Português de termos de um \emph{Thesaurus}. Cada termo é iniciado pela sigla '\emph{PT}' e tem a si associado uma ou mais categorias. Um termo pode possuir um conjunto de definições. Uma definição é uma linha iniciada pela sigla '\emph{Def}'. 
@@ -656,12 +658,12 @@ function norm(str) {
 \end{lstlisting}
 
 
-\vspace{15}
+\vskip 40
 \section{Conclusão}
 
 Com a realização deste trabalho, pudemos pôr em prática os conceitos adquiridos nas aulas teórico-práticas sobre a ferramenta \emph{GAWK}.
 
-Percebemos a importância do uso das expressões regulares e ações semânticas, de forma a podermos pegar num texto de um qualquer tipo, obter as informações que necessitamos e, com elas, chegar a um conjunto de conclusões.
+Percebemos a importância do uso das expressões regulares e ações semânticas, de forma a podermos pegar num ficheiro, obter as informações que necessitamos e, com elas, chegar a um conjunto de conclusões.
 
 Tomámos consciência de que esta tarefa nem sempre é fácil (devido à complexidade dos textos em questão), o que faz com que a definição das expressões regulares para conseguirmos obter as informações que necessitamos nem sempre seja uma tarefa trivial. Um bom exemplo deste tipo de dificuldade, foi a nossa tentativa de separar as pessoas no ficheiro \emph{xml} do exercício 2 relativo ao álbum de fotografias.
 
