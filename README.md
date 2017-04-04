@@ -1,4 +1,4 @@
-#PL
+# PL
 
 Trabalhos práticos da U.C. de Processamento de Linguagens (2016/17)
 
