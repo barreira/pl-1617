@@ -1,0 +1,34 @@
+<!ELEMENT sinopse (project, title?, author?, date?, text)>
+<!ELEMENT text (abstract, section*)>
+<!ELEMENT abstract (p | image)*>
+<!ELEMENT section (author?,date?,(meta | p | image | ul | ol |dl |section)*)>
+<!ATTLIST section
+	title CDATA #REQUIRED
+	url CDATA #IMPLIED
+	encterm CDATA #IMPLIED
+>
+<!ELEMENT dl (dt,dd)*>
+<!ELEMENT dt (#PCDATA|b)*>
+<!ELEMENT dd (#PCDATA|ul)*>
+
+<!ELEMENT meta (author | date | obs)*>
+<!ELEMENT date (#PCDATA)>
+<!ELEMENT obs (#PCDATA)>
+<!ELEMENT li (#PCDATA)>
+<!ELEMENT ul (li)*>
+<!ELEMENT ol (li)*>
+<!ELEMENT image (#PCDATA)>
+<!ATTLIST image
+	href CDATA #REQUIRED
+>
+<!ELEMENT project (#PCDATA)>
+<!ELEMENT title (#PCDATA)>
+<!ELEMENT author (#PCDATA)>
+<!ELEMENT p (#PCDATA|a|b)*>
+<!ELEMENT ref (#PCDATA)>
+<!ATTLIST ref
+	type CDATA #IMPLIED
+>
+<!ELEMENT a (#PCDATA)>
+<!ATTLIST a href CDATA #REQUIRED>
+<!ELEMENT b (#PCDATA)>
