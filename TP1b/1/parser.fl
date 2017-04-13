@@ -1,0 +1,32 @@
+%option noyywrap
+%x TD BI
+%%
+<*>\<td\> { BEGIN TD; }
+
+<TD>\<\/td\> {
+	BEGIN INITIAL;  
+}
+
+<TD>\<i\> { }
+<TD>\<b\> { }
+
+<TD>[A-Za-z ]+[\<\/] {
+	yytext[yyleng - 1] = '\0';
+
+	if (yytext[yyleng - 2] == ' ') {
+		yytext[yyleng - 2] = '\0';
+	}
+
+	printf("%s\n", yytext);
+	BEGIN INITIAL;
+}
+
+.|\n {}
+
+%%
+int main (int argc, char* argv[]) {
+    if(argc == 2)
+    yyin = fopen(argv[1], "r");
+    yylex();
+    return 0;
+}
