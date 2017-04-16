@@ -10,8 +10,9 @@
 
 	void insert(void)
 	{
+		//printf("Key = %s Value = %s\n", key, value);
 		if (key != NULL && value != NULL) {
-			g_tree_insert(tree, value, key);
+			g_tree_insert(tree, key, value);
 			key = value = NULL;
 		}
 	}
@@ -19,40 +20,18 @@
 %%
 <*>\<td\> { BEGIN TD; }
 
-<TD>\<\/td\> {
-	BEGIN INITIAL;  
-}
-
 <TD>\<i\> { }
 <TD>\<b\> { }
 
-<TD>[A-Za-z ]+[\<\/] {
-	yytext[yyleng - 1] = '\0';
+<TD>[a-zA-Z ']+[\<] {
+	printf("ajhajhhja - %s", yytext);
+}
 
-	if (yytext[yyleng - 2] == ' ') {
-		yytext[yyleng - 2] = '\0';
-	}
-
-	value = strdup(yytext);
-	insert();
-
+<TD>\<\/td\> {
 	BEGIN INITIAL;
 }
 
-<TD>[A-Za-z \']+[\<\/] {
-	yytext[yyleng - 1] = '\0';
-
-	if (yytext[yyleng - 2] == ' ') {
-		yytext[yyleng - 2] = '\0';
-	}
-
-	key = strdup(yytext);
-	insert();
-
-	BEGIN INITIAL;
-}
-
-.|\n {}
+.|\n { }
 
 %%
 
@@ -76,7 +55,7 @@ int main (int argc, char* argv[]) {
     
     yylex();
     printf("%d\n", g_tree_nnodes(tree));
-  //  g_tree_foreach(tree, print, NULL);
+  	g_tree_foreach(tree, print, NULL);
     g_tree_destroy(tree);
 
     return 0;
