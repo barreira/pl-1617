@@ -1,19 +1,33 @@
 %option noyywrap
-%x TEMPLATE PARAMS VARS
+%x TEMPLATE PARAMS VARS MAP
 
 %{
 	#include <glib.h>
 
 
 	#define MAX_LINES 1000
-	#define LINE_SIZE 1024
+	#define MAX_VARS  20
+
+
+	gint comp(gconstpointer, gconstpointer);
+	gboolean print(gpointer key, gpointer value, gpointer data);
 
 
 	FILE* fp;	
-	int numVars = 0;
-	int size = 0;
-	char array[MAX_LINES][LINE_SIZE];
-	char line[LINE_SIZE];
+	int array_size = 0;
+	char* array[MAX_LINES];
+	char* line = NULL;
+	char* var = NULL;
+	GTree* tree;
+
+	int vars_size = 0;
+	char* vars[MAX_VARS];
+
+	int mapMode = 0;
+	int mapLine = 0;
+	char* functionName = "";
+	char* listLength = ""; 
+	char* list = "";
 %}
 
 %%
@@ -39,37 +53,121 @@
 
 <TEMPLATE>\}\} {
 	int i = 0;
+	gchar* auxVar = "";
+
+	
+	for (; i < vars_size; i++) {
+		if (i > 0) {
+			fprintf(fp, ", ");
+		}
+
+		fprintf(fp, "char* ");
+		fprintf(fp, "%s", vars[i]);	
+	}
+
+	if (mapMode == 1) {
+		if (i > 0) {
+			fprintf(fp, ", int %s,", listLength);
+		}
+		else {
+			fprintf(fp, "int %s,", listLength);
+		}
+
+		fprintf(fp, " char* %s[]", list);		
+	}
 
 	fprintf(fp, ")\n{\n");
 	fprintf(fp, "\tchar BUF[10000];\n\tint j = 0;\n");
 
-	for (; i < size; i++) {
-		fprintf(fp, "\tj += sprintf(BUF + j, \"%s\\n\");\n", array[i]);
+	
+	for (i = 0; i < array_size; i++) {
+		if (mapMode == 1 && mapLine == i) {
+			fprintf(fp, "\tj += sprintf(BUF + j, \"%s\");\n", array[i]);
+			fprintf(fp,
+                       "\tfor(int i = 0; i < %s; i++) {\n\t\tj += sprintf(BUF + j, \"%%s\", %s(%s[i]));\n\t}\n", listLength, functionName, list);  
+			fprintf(fp, "\tj += sprintf(BUF + j, \"%s\\n\");\n", array[i + 1]);
+		}
+		else {
+			auxVar = (gchar*)g_tree_lookup(tree, array[i]);
+		
+			if (auxVar != NULL && strcmp(auxVar, "") != 0) {
+				fprintf(fp, 
+                            "\tj += sprintf(BUF + j, \"%s\\n\", %s);\n", 
+                             array[i], auxVar);
+			}
+			else if (auxVar) {
+				fprintf(fp, 
+                            "\tj += sprintf(BUF + j, \"%s\\n\");\n", 
+                            array[i]);
+			}
+		}
 	}
 
-	fprintf(fp, "\tstrdup(BUF);\n}\n");
-	numVars = 0;
-	size = 0;
-
+	fprintf(fp, "\treturn strdup(BUF);\n}\n");
+	
+	array_size = 0;
+	vars_size = 0;
+	mapMode = 0;
+	mapLine = 0;
+	
 	BEGIN INITIAL;
 }
 
 <TEMPLATE>^[ \t]*[a-zA-Z0-9<> /]+ {
-	strcat(line, yytext);
+	if (line == NULL) {
+		line = strdup(yytext);
+	}
+	else {
+		strcat(line, yytext);
+	}
 }
 
 <TEMPLATE>[ \t]*[a-zA-Z0-9<> /]+$ {
-	if (line[0] != '\0') {
+	int auxMap = 0;
+
+	if (line != NULL && mapMode != 1) {
 		strcat(line, "%s");
+		strcat(line, yytext);
+		array[array_size++] = strdup(line);
 	}
-	
-	strcat(line, yytext);
-	strcpy(array[size++], line);
-	line[0] = '\0';
+	else if (line != NULL && mapMode == 1) {
+		auxMap = 1;
+		
+		if (var != NULL) {
+			var[0] = '\0';
+		}
+
+		array[array_size++] = strdup(line);
+		array[array_size++] = strdup(yytext);
+	}
+	else if (line == NULL) {
+		if (var != NULL) {
+			var[0] = '\0';
+		}
+
+		array[array_size++] = strdup(yytext);
+	}	
+
+
+	if (auxMap != 1) {
+		if (var == NULL) {
+			g_tree_insert(tree, array[array_size - 1], "");
+		}
+		else {
+			g_tree_insert(tree, array[array_size - 1], strdup(var));
+		}
+	}
+
+	line = NULL;
 }
 
 <TEMPLATE>[ \t]*[a-zA-Z0-9<> /]+ {
-	strcat(line, yytext);
+	if (line == NULL) {
+		line = strdup(yytext);
+	}
+	else {
+		strcat(line, yytext);
+	}
 }
 
 <PARAMS>"% " {
@@ -80,28 +178,73 @@
 	BEGIN TEMPLATE;
 }
 
+<VARS>"MAP" { 
+	mapMode = 1;
+	mapLine = array_size;
+	BEGIN MAP;
+}
+
 <VARS>[a-zA-Z]+ {
-	if (numVars > 0) {
-		fprintf(fp, ", ");
+	int i = 0;
+	int existVar = 0;
+
+	var = strdup(yytext);
+
+	for (; i < vars_size; i++) {
+		if (strcmp(var, vars[i]) == 0) {
+			existVar = 1;
+			break;
+		}
 	}
 
-	fprintf(fp, "char* ");
-	fprintf(fp, "%s", yytext);
-	numVars++;
+	if (existVar == 0) {
+		vars[vars_size++] = strdup(var); 
+	}
+}
+
+<MAP>"%]" {
+	BEGIN TEMPLATE;
+}
+
+<MAP>[a-zA-Z ]+ {
+	functionName = strdup(strtok(yytext, " "));   
+	listLength = strdup(strtok(NULL, " "));
+	list = strdup(strtok(NULL, " "));
 }
 
 .|\n { fprintf(fp, "%s", yytext);}
 
 %%
 
+
+gint comp(gconstpointer a, gconstpointer b)
+{
+	return (strcmp(a, b));
+}
+
+
+gboolean print(gpointer key, gpointer value, gpointer data)
+{
+	char* sKey = key;
+	char* sValue = value;
+
+	g_print("Key: %s, Value: %s\n", sKey, sValue);
+	return FALSE;
+}
+
+
 int main(int argc, char** argv)
 {
+	tree = g_tree_new(comp);
+
 	if (argc == 2) {
 		yyin = fopen(argv[1], "r");
 		yylex();
 	}
 
+
 	fclose(fp);
+	g_tree_destroy(tree);	
 
 	return 0;
 }
