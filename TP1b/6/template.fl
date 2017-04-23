@@ -5,12 +5,11 @@
 	#include <glib.h>
 
 
-	#define MAX_LINES 1000
+	#define MAX_LINES 10000
 	#define MAX_VARS  20
 
 
 	gint comp(gconstpointer, gconstpointer);
-	gboolean print(gpointer key, gpointer value, gpointer data);
 
 
 	FILE* fp;	
@@ -24,14 +23,13 @@
 	char* vars[MAX_VARS];
 
 	int mapMode = 0;
-	int mapLine = 0;
+	int mapLine = 0; 
 	char* functionName = "";
 	char* listLength = ""; 
 	char* list = "";
 %}
 
 %%
-	fp = fopen("template.c", "w");
 
 <*>^[a-zA-Z]+\=\{\{ {
 	int i = 0;
@@ -223,22 +221,19 @@ gint comp(gconstpointer a, gconstpointer b)
 }
 
 
-gboolean print(gpointer key, gpointer value, gpointer data)
-{
-	char* sKey = key;
-	char* sValue = value;
-
-	g_print("Key: %s, Value: %s\n", sKey, sValue);
-	return FALSE;
-}
-
-
 int main(int argc, char** argv)
 {
+	char* output;
+
 	tree = g_tree_new(comp);
 
 	if (argc == 2) {
 		yyin = fopen(argv[1], "r");
+
+		output = strtok(argv[1], ".");
+		strcat(output, ".c");
+		fp = fopen(output, "w");
+
 		yylex();
 	}
 

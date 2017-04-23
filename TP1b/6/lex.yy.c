@@ -509,18 +509,17 @@ int yy_flex_debug = 0;
 #define YY_MORE_ADJ 0
 #define YY_RESTORE_YY_MORE_OFFSET
 char *yytext;
-#line 1 "parser.fl"
+#line 1 "template.fl"
 
-#line 5 "parser.fl"
+#line 5 "template.fl"
 	#include <glib.h>
 
 
-	#define MAX_LINES 1000
+	#define MAX_LINES 10000
 	#define MAX_VARS  20
 
 
 	gint comp(gconstpointer, gconstpointer);
-	gboolean print(gpointer key, gpointer value, gpointer data);
 
 
 	FILE* fp;	
@@ -534,11 +533,11 @@ char *yytext;
 	char* vars[MAX_VARS];
 
 	int mapMode = 0;
-	int mapLine = 0;
+	int mapLine = 0; 
 	char* functionName = "";
 	char* listLength = ""; 
 	char* list = "";
-#line 542 "lex.yy.c"
+#line 541 "lex.yy.c"
 
 #define INITIAL 0
 #define TEMPLATE 1
@@ -763,11 +762,10 @@ YY_DECL
 		}
 
 	{
-#line 33 "parser.fl"
+#line 32 "template.fl"
 
-	fp = fopen("template.c", "w");
 
-#line 771 "lex.yy.c"
+#line 769 "lex.yy.c"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -827,7 +825,7 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 36 "parser.fl"
+#line 34 "template.fl"
 {
 	int i = 0;
 
@@ -844,14 +842,14 @@ YY_RULE_SETUP
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 50 "parser.fl"
+#line 48 "template.fl"
 {
 	BEGIN PARAMS;
 }
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 54 "parser.fl"
+#line 52 "template.fl"
 {
 	int i = 0;
 	gchar* auxVar = "";
@@ -916,7 +914,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 116 "parser.fl"
+#line 114 "template.fl"
 {
 	if (line == NULL) {
 		line = strdup(yytext);
@@ -931,7 +929,7 @@ case 5:
 (yy_c_buf_p) = yy_cp -= 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 125 "parser.fl"
+#line 123 "template.fl"
 {
 	int auxMap = 0;
 
@@ -973,7 +971,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 164 "parser.fl"
+#line 162 "template.fl"
 {
 	if (line == NULL) {
 		line = strdup(yytext);
@@ -985,21 +983,21 @@ YY_RULE_SETUP
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 173 "parser.fl"
+#line 171 "template.fl"
 {
 	BEGIN VARS;
 } 
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 177 "parser.fl"
+#line 175 "template.fl"
 {
 	BEGIN TEMPLATE;
 }
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 181 "parser.fl"
+#line 179 "template.fl"
 { 
 	mapMode = 1;
 	mapLine = array_size;
@@ -1008,7 +1006,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 187 "parser.fl"
+#line 185 "template.fl"
 {
 	int i = 0;
 	int existVar = 0;
@@ -1029,14 +1027,14 @@ YY_RULE_SETUP
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 205 "parser.fl"
+#line 203 "template.fl"
 {
 	BEGIN TEMPLATE;
 }
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 209 "parser.fl"
+#line 207 "template.fl"
 {
 	functionName = strdup(strtok(yytext, " "));   
 	listLength = strdup(strtok(NULL, " "));
@@ -1046,15 +1044,15 @@ YY_RULE_SETUP
 case 13:
 /* rule 13 can match eol */
 YY_RULE_SETUP
-#line 215 "parser.fl"
+#line 213 "template.fl"
 { fprintf(fp, "%s", yytext);}
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 217 "parser.fl"
+#line 215 "template.fl"
 ECHO;
 	YY_BREAK
-#line 1058 "lex.yy.c"
+#line 1056 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 case YY_STATE_EOF(TEMPLATE):
 case YY_STATE_EOF(PARAMS):
@@ -2062,7 +2060,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 217 "parser.fl"
+#line 215 "template.fl"
 
 
 
@@ -2073,22 +2071,19 @@ gint comp(gconstpointer a, gconstpointer b)
 }
 
 
-gboolean print(gpointer key, gpointer value, gpointer data)
-{
-	char* sKey = key;
-	char* sValue = value;
-
-	g_print("Key: %s, Value: %s\n", sKey, sValue);
-	return FALSE;
-}
-
-
 int main(int argc, char** argv)
 {
+	char* output;
+
 	tree = g_tree_new(comp);
 
 	if (argc == 2) {
 		yyin = fopen(argv[1], "r");
+
+		output = strtok(argv[1], ".");
+		strcat(output, ".c");
+		fp = fopen(output, "w");
+
 		yylex();
 	}
 

@@ -1,4 +1,4 @@
-V=parser
+V=template
 $V: $V.fl
 	flex $V.fl
 	cc -g lex.yy.c -o $V `pkg-config --cflags --libs glib-2.0`
