@@ -52,7 +52,6 @@
 <TEMPLATE>\}\} {
 	int i = 0;
 	gchar* auxVar = "";
-
 	
 	for (; i < vars_size; i++) {
 		if (i > 0) {
@@ -74,6 +73,13 @@
 		fprintf(fp, " char* %s[]", list);		
 	}
 
+
+	if (line != NULL) {
+		array[array_size++] = strdup(line);
+		g_tree_insert(tree, array[array_size - 1], "");
+		line = NULL;
+	}
+
 	fprintf(fp, ")\n{\n");
 	fprintf(fp, "\tchar BUF[10000];\n\tint j = 0;\n");
 
@@ -89,6 +95,7 @@
 			auxVar = (gchar*)g_tree_lookup(tree, array[i]);
 		
 			if (auxVar != NULL && strcmp(auxVar, "") != 0) {
+				
 				fprintf(fp, 
                             "\tj += sprintf(BUF + j, \"%s\\n\", %s);\n", 
                              array[i], auxVar);
