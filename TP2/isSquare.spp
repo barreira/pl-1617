@@ -1,0 +1,16 @@
+num a = 3;
+num b;
+num c = 0;
+num d = 0;
+
+a = read("Inteiro > ");
+b = read("Inteiro > ");
+c = read("Inteiro > ");
+d = read("Inteiro > ");
+
+case (a == b && a == c && a == d) {
+	write("Quadrado\n");
+}
+otherwise {
+	write("Num sei...\n");
+}

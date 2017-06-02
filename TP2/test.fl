@@ -1,0 +1,22 @@
+%x NUMVAR
+
+%{
+	#include <stdio.h>
+%}
+
+%option noyywrap
+
+%%
+
+num                { BEGIN NUMVAR; }
+<NUMVAR>[a-zA-Z]+  { yylval.str = strdup(yytext); return NAME; }
+<NUMVAR>;          { BEGIN INITIAL; return yytext[0]; }
+<NUMVAR>[=]        { return yytext[0]; }
+<NUMVAR>[0-9]+     { yylval.n = atoi(yytext); return NUM; }
+<NUMVAR>[ \n\r\t]  { }
+
+[=;]               { return yytext[0]; }
+[0-9]+             { yylval.n = atoi(yytext); return NUM; }
+[ \n\r\t]          { }
+
+%%
