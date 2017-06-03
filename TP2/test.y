@@ -10,7 +10,7 @@
 	typedef struct var {
         int value;
         char* name;
-    	} var;
+	} var;
 
 	GTree* varsTree;
 %}
@@ -22,8 +22,15 @@
 
 %token <n> NUM
 %token <str> NAME
+%token <str> READ
+%token <str> TEXT
+%token <str> WRITE
 
 %type <var> Var 
+%type <str> Input
+%type <str> Output
+%type <str> OutArgs
+
 
 %left '+' '-'
 %left '*' '/'
@@ -32,11 +39,27 @@
 
 Lines :  { ; }
       |  Var Lines
+      |  Input Lines
+      |  Output Lines
       ;
 
 Var : NAME ';'            { printf("%s\n", $1); }
     | NAME '=' NUM ';'    { printf("%s - %d\n", $1, $3); } 
     ;
+
+
+Input : READ '(' TEXT ')' ';'			{ printf("%s\n", $3); }
+	  | NAME '=' READ '(' TEXT ')' ';'	{ printf("%s %s\n", $1, $5); }
+	  ;
+
+Output : WRITE '(' OutArgs ')' ';' {}
+	   ;
+
+OutArgs : OutArgs '+' NAME		{ printf("1 - %s\n", $3); }
+		| OutArgs '+' TEXT		{ printf("2 - %s\n", $3); }
+		| NAME 					{ printf("3 - %s\n", $1); }
+		| TEXT					{ printf("4 - %s\n", $1); }
+		;
 
 %%
 
