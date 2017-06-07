@@ -1,0 +1,34 @@
+	pushi 0
+	pushi 0
+	pushi 0
+	pushi 0
+	start
+	pushs "Inteiro > "
+	writes
+	read
+	atoi
+	storeg 0
+	pushs "Inteiro > "
+	writes
+	read
+	atoi
+	storeg 1
+	pushs "Inteiro > "
+	writes
+	read
+	atoi
+	storeg 2
+	pushs "Inteiro > "
+	writes
+	read
+	atoi
+	storeg 3
+cond0:
+	pushs "Quadrado\n"
+	writes
+	jz otherCond0
+	pushs "Nao e quadrado...\n"
+	writes
+otherCond0: 
+endCond0:
+end:	stop

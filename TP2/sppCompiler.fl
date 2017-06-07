@@ -1,0 +1,88 @@
+%x NUMVAR READING READINGTEXT WRITING WRITINGARGS WRITINGTEXT CASESTATE OTHERSTATE ARITSTATE LOOPSTATE
+
+%{
+	#include <stdio.h>
+%}
+
+%option noyywrap
+
+%%
+
+num                { BEGIN NUMVAR; }
+<NUMVAR>[a-zA-Z]+  { yylval.str = strdup(yytext); return NAME; }
+<NUMVAR>;          { BEGIN INITIAL; return yytext[0]; }
+<NUMVAR>[=\[\]]    { return yytext[0]; }
+<NUMVAR>[0-9]+     { yylval.n = atoi(yytext); return NUM; }
+<NUMVAR>[ \n\r\t]  { }
+
+
+
+
+
+read { BEGIN READING; yylval.str = strdup(yytext); return READ; }
+
+<READING>\(		{ BEGIN READINGTEXT; return yytext[0]; }
+<READING>[ \n\r\t]  { }
+
+
+
+<READINGTEXT>;		   		{ BEGIN INITIAL; return yytext[0]; }
+<READINGTEXT>\)   			{ return yytext[0]; }
+<READINGTEXT>[a-zA-Z>0-9 \"]* { yylval.str = strdup(yytext); return TEXT; }
+<READINGTEXT>[\n\r\t]   		{ return yytext[0]; }
+
+
+
+
+
+
+write { BEGIN WRITING; yylval.str = strdup(yytext); return WRITE; }
+
+<WRITING>\(	     { BEGIN WRITINGARGS; return yytext[0]; }
+<WRITING>[ \n\r\t]  { }
+
+
+<WRITINGARGS>;		    { BEGIN INITIAL; return yytext[0]; }
+<WRITINGARGS>\"	    { BEGIN WRITINGTEXT; }
+<WRITINGARGS>\)   	    { return yytext[0]; }
+<WRITINGARGS>[a-zA-Z]+  { yylval.str = strdup(yytext); return NAME; }
+<WRITINGARGS>[ \n\r\t]  { }
+<WRITINGARGS>\+	    { return yytext[0]; }
+
+
+<WRITINGTEXT>[a-zA-Z0-9 \.\\]*  { yylval.str = strdup(yytext);return TEXT; }
+<WRITINGTEXT>\"		       { BEGIN WRITINGARGS; }
+
+
+loop { BEGIN LOOPSTATE; yylval.str = strdup(yytext); return LOOP; }
+
+<LOOPSTATE>[ \n\t\r]              { }
+<LOOPSTATE>[\(\)\&\|=<>!\+\-/\*;] { return yytext[0]; }
+<LOOPSTATE>[a-zA-Z]+              { yylval.str = strdup(yytext); return NAME; }
+<LOOPSTATE>[0-9]+                 { yylval.n = atoi(yytext); return NUM; }
+<LOOPSTATE>\{                     { BEGIN INITIAL; return yytext[0]; }
+
+
+
+
+case { BEGIN CASESTATE; yylval.str = strdup(yytext); return CASE; }
+
+<CASESTATE>[ \n\t\r]             { }
+<CASESTATE>[\(\)\&\|=<>!\+\-/\*] { return yytext[0]; }
+<CASESTATE>[a-zA-Z]+             { yylval.str = strdup(yytext); return NAME; }
+<CASESTATE>[0-9]+                { yylval.n = atoi(yytext); return NUM; }
+<CASESTATE>\{                    { BEGIN INITIAL; return yytext[0]; }
+
+
+otherwise { BEGIN OTHERSTATE; yylval.str = strdup(yytext); return OTHERWISE; }
+
+<OTHERSTATE>[ \n\t\r]  { }
+<OTHERSTATE>\{         { BEGIN INITIAL; return yytext[0]; }
+
+
+[=;\}\)\(/\+\*\-\]\[]     { return yytext[0]; }
+[0-9]+                    { yylval.n = atoi(yytext); return NUM; }
+[a-zA-Z]+                 { yylval.str = strdup(yytext); return NAME; }
+[ \n\r\t]                 { }
+
+%%
