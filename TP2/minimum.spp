@@ -1,0 +1,21 @@
+num n;
+num m;
+num aux;
+num i = 1;
+
+n = read("N: ");
+
+m = read("Inteiro: ");
+
+loop (i < n; i = 1 + i){
+	aux = read("Inteiro: ");
+
+	case (aux < m) {
+		m = aux;
+	}
+	otherwise {
+
+	}
+}
+
+write("Menor: " + m);

@@ -3,12 +3,12 @@
 
 
 struct intStack {
-	Value value;
+	ValueInt value;
 	IntStack next;
 };
 
 
-IntStack push(IntStack s, Value value)
+IntStack pushInt(IntStack s, ValueInt value)
 {
 	IntStack nS = malloc(sizeof(struct intStack));
 
@@ -19,7 +19,7 @@ IntStack push(IntStack s, Value value)
 }
 
 
-IntStack pop(IntStack s)
+IntStack popInt(IntStack s)
 {
 	IntStack aux = NULL;
 
@@ -34,9 +34,9 @@ IntStack pop(IntStack s)
 }
 
 
-Value top(IntStack s)
+ValueInt topInt(IntStack s)
 {
-	Value v = 0;
+	ValueInt v = 0;
 
 	if (s != NULL) {
 		v = s->value;
@@ -46,7 +46,7 @@ Value top(IntStack s)
 }
 
 
-int empty(IntStack s)
+int emptyInt(IntStack s)
 {
 	int ret = 1;
 

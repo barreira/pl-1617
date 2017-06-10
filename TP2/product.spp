@@ -1,0 +1,14 @@
+num n;
+num i;
+num acc = 1;
+num x;
+
+n = read("N: ");
+
+loop (i < n; i = 1 + i) {
+	x = read("Inteiro: ");
+	
+	acc = acc * x;
+}
+
+write("Produtorio: " + acc);

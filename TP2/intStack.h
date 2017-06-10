@@ -3,13 +3,13 @@
 
 
 typedef struct intStack* IntStack;
-typedef int Value;
+typedef int ValueInt;
 
 
-IntStack push(IntStack, Value);
-IntStack pop(IntStack);
-Value top(IntStack);
-int empty(IntStack);
+IntStack pushInt(IntStack, ValueInt);
+IntStack popInt(IntStack);
+ValueInt topInt(IntStack);
+int emptyInt(IntStack);
 void destroyIntStack(IntStack);
 
 

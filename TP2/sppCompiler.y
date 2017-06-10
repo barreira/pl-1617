@@ -4,12 +4,18 @@
      #include <stdint.h>
 	#include <glib.h>
 	#include "intStack.h"
+	#include "stringStack.h"
 
+
+	#define EXP_SIZE 1024
 	
+
 	gint comp(gconstpointer, gconstpointer);
 	void writeStart(void);
 	void insertVarsTree(char*, int, int);
 	void readInput(char*, char*);
+	void writeOtherCond(void);
+	char* getAritVar(char*);
 
 	typedef struct var {
         int value;
@@ -21,11 +27,14 @@
 	int error = 0;
 	int reg = 0;
 	int cond = 0;
-	int condLabelWrited = 0;
+	int loop = 0;
+	int loopExpressions = 0;
 	FILE* fp;
 	IntStack condStack = NULL;
-	
-	char* arit = "";
+	IntStack loopStack = NULL;
+	StringStack lExpStack = NULL;	
+
+	char aritExpression[EXP_SIZE] = "";
 %}
 
 %union { 
@@ -42,18 +51,21 @@
 %token <str> OTHERWISE
 %token <str> LOOP
 
-%type <var> Var 
+%type <str> Var 
 %type <str> Input
 %type <str> Output
 %type <str> OutArgs
 %type <str> Cond
 %type <str> OtherCond
 %type <str> CondExp
+%type <str> LoopExp;
 %type <str> AritExp
 %type <str> Loop
+%type <str> LoopBegin
+%type <str> CondBegin
+%type <str> OtherCondBegin
 
-%left OTHERWISE
-%left '{' 
+%left '(' 
 %left '|'
 %left '&'
 %left '+' '-'
@@ -61,11 +73,11 @@
 
 %%
 
-Lines :  { ; }
+Lines :  { }
       |  Var ';' Lines
       |  Input Lines
       |  Output Lines
-      |  Cond Lines   { fprintf(fp, "endCond%d:\n", top(condStack)); condStack = pop(condStack); }
+      |  Cond Lines 
       |  Loop Lines
       ;
 
@@ -73,61 +85,86 @@ Var : NAME              { insertVarsTree($1, reg++, 0); }
     | NAME '[' NUM ']'  { }
     | NAME '=' NUM      { insertVarsTree($1, reg++, $3); } 
     | NAME '[' NUM ']' '=' NUM  { printf("%s[%d]\n", $1, $3); }
-    | NAME '=' AritExp  { }
+    | NAME '=' AritExp  { if (loopExpressions < loop) {
+						loopExpressions++;
+                          	lExpStack = pushString(lExpStack, getAtrib($3, getVarReg($1)));
+                              $$ = strdup(getAtrib($3, getVarReg($1)));
+					 }
+					 else { 
+						fprintf(fp, "%s", getAtrib($3, getVarReg($1))); 
+                          } 
+                        }
     | NAME '[' NUM ']' '=' AritExp  { printf("%s[%d]\n", $1, $3); }
     | NAME '[' NAME ']' '=' AritExp { printf("%s[%s]\n", $1, $3); }
     ;
 
-
 Input : READ '(' TEXT ')' ';'			{ readInput("", $3); }
-	 | NAME '=' READ '(' TEXT ')' ';'	{ readInput($1, $5); } 
-                                          
-                                          
+	 | NAME '=' READ '(' TEXT ')' ';'	{ readInput($1, $5); }                                           
 	 ;
 
-Output : WRITE '(' OutArgs ')' ';' {}
+Output : WRITE '(' OutArgs ')' ';' { }
 	  ;
 
-OutArgs : OutArgs '+' NAME { writeOutput($3, ""); }
-	   | OutArgs '+' TEXT { writeOutput("", $3); }
-	   | NAME 		  { writeOutput($1, ""); }
-	   | TEXT	            { writeOutput("", $1); }
+OutArgs : OutArgs '+' OutArgs { }
+	   | NAME 		     { writeOutput($1, ""); }
+	   | TEXT	               { writeOutput("", $1); }
 	   ;
 
 
-Loop : LOOP '(' Var ';' CondExp ';' Var ')' '{' Lines '}' { }
-     | LOOP '(' CondExp ';' Var ')' '{' Lines '}' { }
-     | LOOP '(' CondExp ')' '{' Lines '}' { }
+Loop : LoopBegin '(' Var ';' LoopExp ';' Var ')' '{' Lines '}' { }
+     | LoopBegin '(' LoopExp ';' Var ')' '{' Lines '}' { fprintf(fp, "%s%s\tjz endLoop%d\n\tjump loop%d\nendLoop%d:\n", $5, $3, topInt(loopStack), topInt(loopStack), topInt(loopStack)); loopStack = popInt(loopStack); lExpStack = popString(lExpStack); }
+     | LoopBegin '(' LoopExp ')' '{' Lines '}' { }
      ; 
      
 
-
-Cond : CASE '(' CondExp ')' '{' Lines '}' { fprintf(fp, "\tjz otherCond%d\n", top(condStack)); fprintf($3); }
-     | Cond OtherCond                     {  }
-     ;
-
-OtherCond : OTHERWISE '{' Lines '}' { writeOtherCond(); }
-          | OTHERWISE Cond          { }
+LoopBegin : LOOP { fprintf(fp, "loop%d:\n", loop); loopStack = pushInt(loopStack, loop++); }
           ;
 
-CondExp : AritExp '<' AritExp     { }
-        | AritExp '>' AritExp     { }
-        | AritExp '<' '=' AritExp { }
-        | AritExp '>' '=' AritExp { } 
-        | AritExp '=' '=' AritExp { writeCond(); }
-        | AritExp '!' '=' AritExp { }
+
+Cond : CondBegin '(' CondExp ')' '{' Lines '}' { fprintf(fp, "\tjump endCond%d\n", topInt(condStack)); }
+     | Cond OtherCond                          { }
+     ;
+
+CondBegin : CASE { writeCondLabel(); }
+          ;
+
+
+OtherCond : OtherCondBegin '{' Lines '}' { fprintf(fp, "endCond%d:\n", topInt(condStack)); condStack = popInt(condStack); }
+          | OtherCondBegin Cond          { }
+          ;
+
+
+OtherCondBegin : OTHERWISE { writeOtherCond(); }
+               ;
+
+CondExp : AritExp '<' AritExp     { fprintf(fp, "%s%s\tinf\n\tjz otherCond%d\n", $1, $3, topInt(condStack)); }
+        | AritExp '>' AritExp     { fprintf(fp, "%s%s\tsup\n\tjz otherCond%d\n", $1, $3, topInt(condStack)); }
+        | AritExp '<' '=' AritExp { fprintf(fp, "%s%s\tinfeq\n\tjz otherCond%d\n", $1, $4, topInt(condStack)); }
+        | AritExp '>' '=' AritExp { fprintf(fp, "%s%s\tsupeq\n\tjz otherCond%d\n", $1, $4, topInt(condStack)); } 
+        | AritExp '=' '=' AritExp { fprintf(fp, "%s%s\tequal\n\tjz otherCond%d\n", $1, $4, topInt(condStack)); }
+        | AritExp '!' '=' AritExp { fprintf(fp, "%s%s\tequal\n\tjnz otherCond%d\n", $1, $4, topInt(condStack)); }
         | CondExp '&' CondExp     { }
         | CondExp '|' CondExp     { }
         ;
 
-AritExp : AritExp '+' AritExp  { }
+LoopExp : AritExp '<' AritExp     { strcpy($$, getLoopExp("\tinf\n", $1, $3)); }
+        | AritExp '>' AritExp     { strcpy($$, getLoopExp("\tsup\n", $1, $3)); }
+        | AritExp '<' '=' AritExp { strcpy($$, getLoopExp("\tinfeq\n", $1, $4)); }
+        | AritExp '>' '=' AritExp { strcpy($$, getLoopExp("\tsupeq\n", $1, $4)); } 
+        | AritExp '=' '=' AritExp { strcpy($$, getLoopExp("\tequal\n", $1, $4)); }
+        | AritExp '!' '=' AritExp { strcpy($$, getLoopExp("\tdiff\n", $1, $4)); }
+        | LoopExp '&' LoopExp     { }
+        | LoopExp '|' LoopExp     { }
+        ;
+
+AritExp : AritExp '+' AritExp  { sprintf($$, "%s%s\tadd\n", $1, $3); }
         | AritExp '-' AritExp  { }
-        | AritExp '*' AritExp  { }
+        | AritExp '*' AritExp  { sprintf($$, "%s%s\tmul\n", $1, $3); }
         | AritExp '/' AritExp  { }
         | '-' AritExp          { }
         | '(' AritExp ')'      { }
-        | NAME                 { }
-        | NUM                  { } 
+        | NAME                 { $$ = strdup(getAritVar($1)); }
+        | NUM                  { $$ = strdup(getAritNum($1)); } 
         ;
 
 %%
@@ -208,26 +245,74 @@ void writeOutput(char* var, char* text)
 
 void writeCondLabel(void)
 {
-	if (condLabelWrited == 0) {
-		fprintf(fp, "cond%d:\n", cond);
-		condStack = push(condStack, cond++);
-		condLabelWrited = 1;
-	}
-}
-
-
-void writeCond(void)
-{
-	writeStart();
-	writeCondLabel();
+	fprintf(fp, "cond%d:\n", cond);
+	condStack = pushInt(condStack, cond++);
 }
 
 
 void writeOtherCond(void)
 {
-	writeStart();
+	fprintf(fp, "otherCond%d:\n", topInt(condStack));
+}
+
+
+char* getAritVar(char* key)
+{
+	int r = 0;
+
+	aritExpression[0] = '\0';
+
+	if (g_tree_lookup_extended(varsTree, key, NULL, (gpointer*)&r) == TRUE) {
+		sprintf(aritExpression, "\tpushg %d\n", r);
+	}
+	else {
+		printf("error: unrecognized token '%s'\n", key);
+		exit(1);
+	}
+
+	return aritExpression;
+}
+
+
+char* getAritNum(int n)
+{
+	aritExpression[0] = '\0';
+
+	sprintf(aritExpression, "\tpushi %d\n\tpushg %d\n", n, reg++);
+
+	return aritExpression;
+}
+
+
+int getVarReg(char* var)
+{
+	int r = 0;
+
+	if (g_tree_lookup_extended(varsTree, var, NULL, (gpointer*)&r) == TRUE);
 	
-	fprintf(fp, "otherCond%d: \n", top(condStack));
+	return r;
+}
+
+
+char* getAtrib(char* op, int n)
+{
+	aritExpression[0] = '\0';
+
+	sprintf(aritExpression, "%s\tstoreg %d\n", op, n);
+
+	return aritExpression;
+}
+
+
+char* getLoopExp(char* op, char* exp1, char* exp2)
+{
+	aritExpression[0] = '\0';
+
+	strcat(aritExpression, exp1);
+	strcat(aritExpression, exp2);
+	strcat(aritExpression, op);
+
+	return aritExpression;
 }
 
 
@@ -261,6 +346,8 @@ int main(int argc, char** argv)
 	fclose(fp);
 	g_tree_destroy(varsTree);
 	destroyIntStack(condStack);
+	destroyStringStack(lExpStack);
 
 	return 0;
 }
+

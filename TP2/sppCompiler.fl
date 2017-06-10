@@ -26,10 +26,10 @@ read { BEGIN READING; yylval.str = strdup(yytext); return READ; }
 
 
 
-<READINGTEXT>;		   		{ BEGIN INITIAL; return yytext[0]; }
-<READINGTEXT>\)   			{ return yytext[0]; }
-<READINGTEXT>[a-zA-Z>0-9 \"]* { yylval.str = strdup(yytext); return TEXT; }
-<READINGTEXT>[\n\r\t]   		{ return yytext[0]; }
+<READINGTEXT>;		   		  { BEGIN INITIAL; return yytext[0]; }
+<READINGTEXT>\)   			  { return yytext[0]; }
+<READINGTEXT>[a-zA-Z>0-9 \<:"]* { yylval.str = strdup(yytext); return TEXT; }
+<READINGTEXT>[\n\r\t]   		  { return yytext[0]; }
 
 
 
@@ -50,8 +50,8 @@ write { BEGIN WRITING; yylval.str = strdup(yytext); return WRITE; }
 <WRITINGARGS>\+	    { return yytext[0]; }
 
 
-<WRITINGTEXT>[a-zA-Z0-9 \.\\]*  { yylval.str = strdup(yytext);return TEXT; }
-<WRITINGTEXT>\"		       { BEGIN WRITINGARGS; }
+<WRITINGTEXT>[a-zA-Z0-9 \.\\><:]*  { yylval.str = strdup(yytext);return TEXT; }
+<WRITINGTEXT>\"		          { BEGIN WRITINGARGS; }
 
 
 loop { BEGIN LOOPSTATE; yylval.str = strdup(yytext); return LOOP; }
