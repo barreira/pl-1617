@@ -5,7 +5,7 @@ num x;
 
 n = read("N: ");
 
-loop (i < n; i = 1 + i) {
+loop (i < n; i = i + 1) {
 	x = read("Inteiro: ");
 	
 	acc = acc * x;
