@@ -7,7 +7,7 @@ n = read("N: ");
 
 m = read("Inteiro: ");
 
-loop (i < n; i = 1 + i){
+loop (i < n; i = i + 1){
 	aux = read("Inteiro: ");
 
 	case (aux < m) {
