@@ -50,6 +50,7 @@
 %token <str> CASE
 %token <str> OTHERWISE
 %token <str> LOOP
+%token <str> MOD
 
 %type <str> Var 
 %type <str> Input
@@ -64,6 +65,7 @@
 %type <str> LoopBegin
 %type <str> CondBegin
 %type <str> OtherCondBegin
+%type <str> ModExp
 
 %left '(' 
 %left '|'
@@ -82,9 +84,15 @@ Lines :  { }
       ;
 
 Var : NAME              { insertVarsTree($1, reg++, 0); }
-    | NAME '[' NUM ']'  { }
-    | NAME '=' NUM      { insertVarsTree($1, reg++, $3); } 
-    | NAME '[' NUM ']' '=' NUM  { printf("%s[%d]\n", $1, $3); }
+    | NAME '[' NUM ']'  { fprintf(fp, "\tpushn %d\n", $3); }
+    | NAME '=' NUM      { if (start == 0) { 
+                          	insertVarsTree($1, reg++, $3);
+                          }
+                          else {
+                          	fprintf(fp, "\tpushi %d\n\tstoreg %d\n", $3, getVarReg($1));
+	                     }
+		              }
+    | NAME '[' NUM ']' '=' NUM  {  }
     | NAME '=' AritExp  { if (loopExpressions < loop) {
 						loopExpressions++;
                           	lExpStack = pushString(lExpStack, getAtrib($3, getVarReg($1)));
@@ -94,30 +102,35 @@ Var : NAME              { insertVarsTree($1, reg++, 0); }
 						fprintf(fp, "%s", getAtrib($3, getVarReg($1))); 
                           } 
                         }
-    | NAME '[' NUM ']' '=' AritExp  { printf("%s[%d]\n", $1, $3); }
-    | NAME '[' NAME ']' '=' AritExp { printf("%s[%s]\n", $1, $3); }
+    | NAME '[' NUM ']' '=' AritExp  {  }
+    | NAME '[' NAME ']' '=' AritExp { fprintf(fp, "\tpushgp\n\tpushi 2\n\tpadd\n\tpushg %d\n%s\tstoren\n", getVarReg($3), $6); }
     ;
 
 Input : READ '(' TEXT ')' ';'			{ readInput("", $3); }
-	 | NAME '=' READ '(' TEXT ')' ';'	{ readInput($1, $5); }                                           
+	 | NAME '=' READ '(' TEXT ')' ';'	{ readInput($1, $5); }  
+      | NAME '[' NAME ']' '=' READ '(' TEXT ')' ';' { 
+                 fprintf(fp, "\tpushgp\n\tpushi 2\n\tpadd\n\tpushg %d\n", getVarReg($3));
+                 fprintf(fp, "\tpushs %s\n\twrites\n\tread\n\tatoi\n\tstoren\n", $8);              
+      }              
 	 ;
 
 Output : WRITE '(' OutArgs ')' ';' { }
 	  ;
 
 OutArgs : OutArgs '+' OutArgs { }
+        | NAME '[' NAME ']'   { fprintf(fp, "\tpushgp\n\tpushi 2\n\tpadd\n\tpushg %d\n\tloadn\n\twritei\n", getVarReg($3)); }
 	   | NAME 		     { writeOutput($1, ""); }
 	   | TEXT	               { writeOutput("", $1); }
 	   ;
 
 
-Loop : LoopBegin '(' Var ';' LoopExp ';' Var ')' '{' Lines '}' { }
+Loop : LoopBegin '(' Var ';' LoopExp ';' Var ')' '{' Lines '}' { fprintf(fp, "%s%s%s\tjz endLoop%d\n\tjump loop%d\nendLoop%d:\n", $3, $7, $5, topInt(loopStack), topInt(loopStack), topInt(loopStack)); loopStack = popInt(loopStack); lExpStack = popString(lExpStack); }
      | LoopBegin '(' LoopExp ';' Var ')' '{' Lines '}' { fprintf(fp, "%s%s\tjz endLoop%d\n\tjump loop%d\nendLoop%d:\n", $5, $3, topInt(loopStack), topInt(loopStack), topInt(loopStack)); loopStack = popInt(loopStack); lExpStack = popString(lExpStack); }
-     | LoopBegin '(' LoopExp ')' '{' Lines '}' { }
+     | LoopBegin '(' LoopExp ')' '{' Lines '}' { fprintf(fp, "%s\tjz endLoop%d\n\tjump loop%d\nendLoop%d:\n", $3, topInt(loopStack), topInt(loopStack), topInt(loopStack)); loopStack = popInt(loopStack); lExpStack = popString(lExpStack); }
      ; 
      
 
-LoopBegin : LOOP { fprintf(fp, "loop%d:\n", loop); loopStack = pushInt(loopStack, loop++); }
+LoopBegin : LOOP { writeStart(); fprintf(fp, "loop%d:\n", loop); loopStack = pushInt(loopStack, loop++); }
           ;
 
 
@@ -143,6 +156,7 @@ CondExp : AritExp '<' AritExp     { fprintf(fp, "%s%s\tinf\n\tjz otherCond%d\n",
         | AritExp '>' '=' AritExp { fprintf(fp, "%s%s\tsupeq\n\tjz otherCond%d\n", $1, $4, topInt(condStack)); } 
         | AritExp '=' '=' AritExp { fprintf(fp, "%s%s\tequal\n\tjz otherCond%d\n", $1, $4, topInt(condStack)); }
         | AritExp '!' '=' AritExp { fprintf(fp, "%s%s\tequal\n\tjnz otherCond%d\n", $1, $4, topInt(condStack)); }
+        | ModExp                  { fprintf(fp, "%s\tjz otherCond%d\n", $1, topInt(condStack)); }
         | CondExp '&' CondExp     { }
         | CondExp '|' CondExp     { }
         ;
@@ -158,13 +172,17 @@ LoopExp : AritExp '<' AritExp     { strcpy($$, getLoopExp("\tinf\n", $1, $3)); }
         ;
 
 AritExp : AritExp '+' AritExp  { sprintf($$, "%s%s\tadd\n", $1, $3); }
-        | AritExp '-' AritExp  { }
+        | AritExp '-' AritExp  { sprintf($$, "%s%s\tsub\n", $1, $3); }
         | AritExp '*' AritExp  { sprintf($$, "%s%s\tmul\n", $1, $3); }
-        | AritExp '/' AritExp  { }
+        | AritExp '/' AritExp  { sprintf($$, "%s%s\tdiv\n", $1, $3); }
         | '-' AritExp          { }
         | '(' AritExp ')'      { }
         | NAME                 { $$ = strdup(getAritVar($1)); }
         | NUM                  { $$ = strdup(getAritNum($1)); } 
+        | NAME '[' NAME ']'    { $$ = strdup(getArrayVar($3)); }
+        ;
+
+ModExp: | AritExp MOD AritExp  { sprintf($$, "%s%s\tmod\n", $1, $3); }
         ;
 
 %%
@@ -278,7 +296,7 @@ char* getAritNum(int n)
 {
 	aritExpression[0] = '\0';
 
-	sprintf(aritExpression, "\tpushi %d\n\tpushg %d\n", n, reg++);
+	sprintf(aritExpression, "\tpushi %d\n", n);
 
 	return aritExpression;
 }
@@ -299,6 +317,24 @@ char* getAtrib(char* op, int n)
 	aritExpression[0] = '\0';
 
 	sprintf(aritExpression, "%s\tstoreg %d\n", op, n);
+
+	return aritExpression;
+}
+
+
+char* getArrayVar(char* key)
+{
+	int r = 0;
+
+	aritExpression[0] = '\0';
+
+	if (g_tree_lookup_extended(varsTree, key, NULL, (gpointer*)&r) == TRUE) {
+		sprintf(aritExpression, "\tpushgp\n\tpushi 2\n\tpadd\n\tpushg %d\n\tloadn\n", r);
+	}
+	else {
+		printf("error: unrecognized token '%s'\n", key);
+		exit(1);
+	}
 
 	return aritExpression;
 }

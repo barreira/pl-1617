@@ -1,0 +1,12 @@
+num n = 5;
+num array[5];
+num i;
+
+loop (i < n; i = i + 1) {
+	array[i] = read("Inteiro: ");	
+}
+
+loop (n >= 0; n = n - 1) {
+	write(array[n] + "\n");
+}
+

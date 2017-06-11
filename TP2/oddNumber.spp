@@ -1,0 +1,20 @@
+num count = 0;
+num i = 0;
+num n;
+aux = 0;
+
+n = read("N: ");
+
+loop (i < n; i = i + 1) {
+	aux = read("Inteiro: ");
+
+	case (aux mod 2) {
+		write("Impar\n");
+		count = count + 1;
+	}
+	otherwise {
+	}
+} 
+
+
+write("Impares: " + count);

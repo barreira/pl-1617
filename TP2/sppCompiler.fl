@@ -47,6 +47,7 @@ write { BEGIN WRITING; yylval.str = strdup(yytext); return WRITE; }
 <WRITINGARGS>\)   	    { return yytext[0]; }
 <WRITINGARGS>[a-zA-Z]+  { yylval.str = strdup(yytext); return NAME; }
 <WRITINGARGS>[ \n\r\t]  { }
+<WRITINGARGS>[\[\]]     { return yytext[0]; }
 <WRITINGARGS>\+	    { return yytext[0]; }
 
 
@@ -68,7 +69,8 @@ loop { BEGIN LOOPSTATE; yylval.str = strdup(yytext); return LOOP; }
 case { BEGIN CASESTATE; yylval.str = strdup(yytext); return CASE; }
 
 <CASESTATE>[ \n\t\r]             { }
-<CASESTATE>[\(\)\&\|=<>!\+\-/\*] { return yytext[0]; }
+<CASESTATE>[\(\)\&\|=<>!\+\-/\*\[\]] { return yytext[0]; }
+<CASESTATE>mod                   { yylval.str = strdup(yytext); return MOD; }
 <CASESTATE>[a-zA-Z]+             { yylval.str = strdup(yytext); return NAME; }
 <CASESTATE>[0-9]+                { yylval.n = atoi(yytext); return NUM; }
 <CASESTATE>\{                    { BEGIN INITIAL; return yytext[0]; }

@@ -1,0 +1,33 @@
+num i;
+num j;
+num aux;
+num b;
+num array[3];
+
+loop (i < 3; i = i + 1) {
+	array[i] = read("Inteiro: ");
+}
+
+i = 0;
+
+loop (i < 2; i = i + 1) {
+
+	j = i + 1;	
+	loop (j < 3; j = j + 1) {
+		case (array[i] < array[j]) {
+			aux = array[i];
+               b = array[j];
+			array[i] = b;
+			array[j] = aux;
+		}
+		otherwise {
+
+		}
+	}  
+}
+
+i = 0;
+
+loop (i < 3; i = i + 1) {
+	write(array[i] + " ");
+}
