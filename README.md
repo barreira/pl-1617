@@ -1,4 +1,5 @@
 # PL
+### Nota finais dos trabalhos: 17 (TP1), 17 (TP2), 15 (TP3).
 
 Trabalhos práticos da U.C. de Processamento de Linguagens (2016/17)
 
